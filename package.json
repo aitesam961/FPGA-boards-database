@@ -8,5 +8,8 @@
     "init-db": "node scripts/init-db.js",
     "import-csv": "node scripts/import-csv.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "sqlite3": "^5.1.7"
+  }
 }
