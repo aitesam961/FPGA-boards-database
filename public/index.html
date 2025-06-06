@@ -1,6 +1,38 @@
-<!-- Main UI -->
 <!DOCTYPE html>
-<html>
-<head><title>Main UI</title></head>
-<body></body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FPGA Boards Database</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>FPGA Boards Database</h1>
+  </header>
+  
+  <div class="filters">
+    <div class="filter-group">
+      <label for="family">FPGA Family:</label>
+      <select id="family">
+        <option value="">All Families</option>
+        <!-- Populated dynamically -->
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="price">Max Price ($):</label>
+      <input type="number" id="price" min="0" step="50" placeholder="No limit">
+    </div>
+    
+    <button id="search">Search</button>
+    <button id="export">Export to CSV</button>
+  </div>
+  
+  <div id="results">
+    <!-- Results will be populated here -->
+  </div>
+  
+  <script src="app.js"></script>
+</body>
 </html>

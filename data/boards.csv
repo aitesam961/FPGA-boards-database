@@ -1,0 +1,3 @@
+name,manufacturer,fpga_family,price,vendor_link,features,peripherals,connectivity
+Zybo Z7-20,Digilent,Xilinx Zynq-7000,249.00,https://digilent.com,"HDMI;Ethernet;Audio","USB 2.0;SD Card;GPIO","WiFi;Bluetooth"
+Arty S7-50,Digilent,Xilinx Spartan-7,129.00,https://digilent.com,"MicroSD;Ethernet","USB UART;Pmod","Ethernet"

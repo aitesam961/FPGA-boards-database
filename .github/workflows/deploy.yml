@@ -1,0 +1,33 @@
+name: Deploy FPGA Database
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          
+      - name: Install dependencies
+        run: npm install sqlite3
+        
+      - name: Initialize database
+        run: node scripts/init-db.js
+        
+      - name: Import initial data
+        run: node scripts/import-csv.js
+        
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: publish
+          workingDirectory: 'server'
