@@ -1,0 +1,148 @@
+[
+  {
+    "id": 1,
+    "name": "Basys 3",
+    "manufacturer": "Xilinx",
+    "family": "Artix",
+    "release_year": 2013,
+    "description": "Entry-level FPGA development board",
+    "dimensions": "160mm x 100mm",
+    "weight_grams": 200.0,
+    "typical_price_usd": 149.0,
+    "documentation_url": "https://reference.digilentinc.com/reference/programmable-logic/basys-3/start",
+    "logic_elements": 33440,
+    "flip_flops": 66880,
+    "block_ram_kb": 1800,
+    "dsp_blocks": 90,
+    "plls": 5,
+    "max_user_io": 108,
+    "transceivers": 0,
+    "transceiver_speed_gbps": 0.0,
+    "peripherals": [
+      "USB 2.0",
+      "Ethernet",
+      "HDMI",
+      "GPIO"
+    ],
+    "features": [
+      "Open Source",
+      "Arduino Compatible"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Arty A7-100T",
+    "manufacturer": "Xilinx",
+    "family": "Artix",
+    "release_year": 2016,
+    "description": "Artix-7 FPGA Development Board",
+    "dimensions": "228mm x 127mm",
+    "weight_grams": 250.0,
+    "typical_price_usd": 249.0,
+    "documentation_url": "https://reference.digilentinc.com/reference/programmable-logic/arty-a7/start",
+    "logic_elements": 101440,
+    "flip_flops": 202880,
+    "block_ram_kb": 4860,
+    "dsp_blocks": 240,
+    "plls": 6,
+    "max_user_io": 100,
+    "transceivers": 0,
+    "transceiver_speed_gbps": 0.0,
+    "peripherals": [
+      "USB 2.0",
+      "GPIO",
+      "SD Card"
+    ],
+    "features": [
+      "Open Source",
+      "Arduino Compatible"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Nexys A7",
+    "manufacturer": "Xilinx",
+    "family": "Artix",
+    "release_year": 2017,
+    "description": "Artix-7 FPGA Board with rich peripherals",
+    "dimensions": "165mm x 115mm",
+    "weight_grams": 300.0,
+    "typical_price_usd": 349.0,
+    "documentation_url": "https://reference.digilentinc.com/reference/programmable-logic/nexys-a7/start",
+    "logic_elements": 101440,
+    "flip_flops": 202880,
+    "block_ram_kb": 4860,
+    "dsp_blocks": 240,
+    "plls": 6,
+    "max_user_io": 100,
+    "transceivers": 0,
+    "transceiver_speed_gbps": 0.0,
+    "peripherals": [
+      "USB 2.0",
+      "Ethernet",
+      "HDMI",
+      "GPIO",
+      "SD Card"
+    ],
+    "features": [
+      "Open Source",
+      "Arduino Compatible"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "DE10-Nano",
+    "manufacturer": "Intel FPGA",
+    "family": "Cyclone",
+    "release_year": 2016,
+    "description": "Cyclone V SoC FPGA Development Kit",
+    "dimensions": "100mm x 75mm",
+    "weight_grams": 150.0,
+    "typical_price_usd": 199.0,
+    "documentation_url": "https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=205&No=1046",
+    "logic_elements": 110000,
+    "flip_flops": 55000,
+    "block_ram_kb": 3150,
+    "dsp_blocks": 112,
+    "plls": 2,
+    "max_user_io": 84,
+    "transceivers": 0,
+    "transceiver_speed_gbps": 0.0,
+    "peripherals": [
+      "USB 2.0",
+      "Ethernet",
+      "HDMI",
+      "GPIO"
+    ],
+    "features": [
+      "Arduino Compatible"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "TinyFPGA BX",
+    "manufacturer": "Lattice Semiconductor",
+    "family": "ECP5",
+    "release_year": 2018,
+    "description": "Small form-factor iCE40 FPGA board",
+    "dimensions": "36mm x 18mm",
+    "weight_grams": 5.0,
+    "typical_price_usd": 39.0,
+    "documentation_url": "https://tinyfpga.com/bx/guide.html",
+    "logic_elements": 7680,
+    "flip_flops": 7680,
+    "block_ram_kb": 128,
+    "dsp_blocks": 8,
+    "plls": 1,
+    "max_user_io": 36,
+    "transceivers": 0,
+    "transceiver_speed_gbps": 0.0,
+    "peripherals": [
+      "USB 2.0"
+    ],
+    "features": [
+      "Open Source",
+      "Breadboard Friendly"
+    ]
+  }
+]

@@ -10,8 +10,8 @@ def export_to_json():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # Updated query with proper GROUP_CONCAT syntax
-    query = """
+    # First get all boards with their basic info
+    cursor.execute("""
     SELECT 
         b.id,
         b.name,
@@ -30,32 +30,35 @@ def export_to_json():
         s.plls,
         s.max_user_io,
         s.transceivers,
-        s.transceiver_speed_gbps,
-        (SELECT GROUP_CONCAT(DISTINCT p.name, '||') 
-         FROM board_peripherals bp
-         JOIN peripherals p ON bp.peripheral_id = p.id
-         WHERE bp.board_id = b.id) as peripherals,
-        (SELECT GROUP_CONCAT(DISTINCT fe.name, '||') 
-         FROM board_features bf
-         JOIN features fe ON bf.feature_id = fe.id
-         WHERE bf.board_id = b.id) as features
+        s.transceiver_speed_gbps
     FROM fpga_boards b
     LEFT JOIN manufacturers m ON b.manufacturer_id = m.id
     LEFT JOIN fpga_families f ON b.family_id = f.id
     LEFT JOIN specifications s ON b.id = s.board_id
-    GROUP BY b.id
-    """
+    """)
     
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    
-    # Convert rows to dictionaries
     boards = []
-    for row in rows:
-        board = dict(row)
-        # Split concatenated strings into lists
-        board['peripherals'] = board['peripherals'].split('||') if board['peripherals'] else []
-        board['features'] = board['features'].split('||') if board['features'] else []
+    for board_row in cursor.fetchall():
+        board = dict(board_row)
+        
+        # Get peripherals for this board
+        cursor.execute("""
+        SELECT p.name 
+        FROM board_peripherals bp
+        JOIN peripherals p ON bp.peripheral_id = p.id
+        WHERE bp.board_id = ?
+        """, (board['id'],))
+        board['peripherals'] = [row[0] for row in cursor.fetchall()]
+        
+        # Get features for this board
+        cursor.execute("""
+        SELECT f.name 
+        FROM board_features bf
+        JOIN features f ON bf.feature_id = f.id
+        WHERE bf.board_id = ?
+        """, (board['id'],))
+        board['features'] = [row[0] for row in cursor.fetchall()]
+        
         boards.append(board)
     
     # Write to JSON file
