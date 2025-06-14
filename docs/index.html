@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPGA Boards Database</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>FPGA Boards Database</h1>
+        <p>Find the perfect FPGA development board for your project</p>
+    </header>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search boards...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <div class="filter-section">
+                <h3>Filters</h3>
+                
+                <div class="filter-group">
+                    <h4>Manufacturer</h4>
+                    <div id="manufacturer-filters" class="filter-options"></div>
+                </div>
+                
+                <div class="filter-group">
+                    <h4>FPGA Family</h4>
+                    <div id="family-filters" class="filter-options"></div>
+                </div>
+                
+                <div class="filter-group">
+                    <h4>Price Range ($)</h4>
+                    <div class="price-range">
+                        <input type="number" id="min-price" placeholder="Min" min="0">
+                        <span>to</span>
+                        <input type="number" id="max-price" placeholder="Max" min="0">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <h4>Logic Elements</h4>
+                    <div class="range-input">
+                        <input type="range" id="logic-elements-range" min="0" max="1000000" step="1000" value="1000000">
+                        <span id="logic-elements-value">Up to 1,000,000</span>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <h4>Peripherals</h4>
+                    <div id="peripheral-filters" class="filter-options"></div>
+                </div>
+                
+                <div class="filter-group">
+                    <h4>Features</h4>
+                    <div id="feature-filters" class="filter-options"></div>
+                </div>
+                
+                <button id="reset-filters" class="reset-btn">Reset All Filters</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="results-info">
+                <span id="results-count">Loading...</span>
+                <div class="sort-options">
+                    <label for="sort-by">Sort by:</label>
+                    <select id="sort-by">
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="price-asc">Price (Low to High)</option>
+                        <option value="price-desc">Price (High to Low)</option>
+                        <option value="logic-asc">Logic Elements (Low to High)</option>
+                        <option value="logic-desc">Logic Elements (High to Low)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="boards-container" class="boards-grid">
+                <!-- Boards will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>FPGA Boards Database &copy; <span id="year"></span> | <a href="https://github.com/aitesam961/FPGA-boards-database" target="_blank">GitHub Repository</a></p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>
