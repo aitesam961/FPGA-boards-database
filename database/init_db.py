@@ -2,9 +2,13 @@ import sqlite3
 import csv
 from pathlib import Path
 
-def initialize_database():
+def initialize_database(force=False):
     db_path = Path(__file__).parent / "fpga_boards.db"
     
+    if force and db_path.exists():
+        db_path.unlink()
+        print("Existing database removed.")
+
     # Connect to SQLite database (creates if not exists)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -13,7 +17,7 @@ def initialize_database():
     with open(Path(__file__).parent / "schema.sql") as f:
         cursor.executescript(f.read())
     
-    # Insert sample data (optional)
+    # Insert sample data (only if tables are empty)
     insert_sample_data(cursor)
     
     conn.commit()
@@ -21,7 +25,17 @@ def initialize_database():
     print(f"Database initialized at {db_path}")
 
 def insert_sample_data(cursor):
-    # Sample manufacturers
+    """Insert sample data, skipping duplicates"""
+    
+    # Check if database already has data
+    cursor.execute("SELECT COUNT(*) FROM fpga_boards")
+    if cursor.fetchone()[0] > 0:
+        print("Database already contains data - skipping sample data insertion")
+        return
+
+    print("Inserting sample data...")
+    
+    # Sample manufacturers - using INSERT OR IGNORE to skip duplicates
     manufacturers = [
         ("Xilinx", "https://www.xilinx.com", 1984),
         ("Intel FPGA", "https://www.intel.com", 1983),
@@ -29,7 +43,10 @@ def insert_sample_data(cursor):
         ("Microchip (Microsemi)", "https://www.microchip.com", 1987),
         ("Achronix", "https://www.achronix.com", 2004),
     ]
-    cursor.executemany("INSERT INTO manufacturers (name, website, founded_year) VALUES (?, ?, ?)", manufacturers)
+    cursor.executemany(
+        "INSERT OR IGNORE INTO manufacturers (name, website, founded_year) VALUES (?, ?, ?)", 
+        manufacturers
+    )
     
     # Sample FPGA families
     fpga_families = [
@@ -44,7 +61,10 @@ def insert_sample_data(cursor):
         ("PolarFire", 4, "Low-power mid-range applications"),
         ("Speedster", 5, "High-performance applications"),
     ]
-    cursor.executemany("INSERT INTO fpga_families (family_name, manufacturer_id, typical_use_case) VALUES (?, ?, ?)", fpga_families)
+    cursor.executemany(
+        "INSERT OR IGNORE INTO fpga_families (family_name, manufacturer_id, typical_use_case) VALUES (?, ?, ?)", 
+        fpga_families
+    )
     
     # Sample peripherals
     peripherals = [
@@ -64,7 +84,10 @@ def insert_sample_data(cursor):
         ("WiFi", "Wireless networking"),
         ("Bluetooth", "Bluetooth connectivity"),
     ]
-    cursor.executemany("INSERT INTO peripherals (name, description) VALUES (?, ?)", peripherals)
+    cursor.executemany(
+        "INSERT OR IGNORE INTO peripherals (name, description) VALUES (?, ?)", 
+        peripherals
+    )
     
     # Sample features
     features = [
@@ -78,7 +101,10 @@ def insert_sample_data(cursor):
         ("Military Grade", "Military temperature range"),
         ("Certified", "Industry certifications available"),
     ]
-    cursor.executemany("INSERT INTO features (name, description) VALUES (?, ?)", features)
+    cursor.executemany(
+        "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)", 
+        features
+    )
     
     # Sample boards
     boards = [
@@ -89,7 +115,7 @@ def insert_sample_data(cursor):
         ("TinyFPGA BX", 7, 3, 2018, "Small form-factor iCE40 FPGA board", "36mm x 18mm", 5, 39.00, 1, "https://tinyfpga.com/bx/guide.html"),
     ]
     cursor.executemany(
-        "INSERT INTO fpga_boards (name, family_id, manufacturer_id, release_year, description, dimensions, weight_grams, typical_price_usd, is_available, documentation_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO fpga_boards (name, family_id, manufacturer_id, release_year, description, dimensions, weight_grams, typical_price_usd, is_available, documentation_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         boards
     )
     
@@ -102,7 +128,7 @@ def insert_sample_data(cursor):
         (5, 7680, 7680, 128, 8, 1, 36, 0, 0),
     ]
     cursor.executemany(
-        "INSERT INTO specifications (board_id, logic_elements, flip_flops, block_ram_kb, dsp_blocks, plls, max_user_io, transceivers, transceiver_speed_gbps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO specifications (board_id, logic_elements, flip_flops, block_ram_kb, dsp_blocks, plls, max_user_io, transceivers, transceiver_speed_gbps) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         specifications
     )
     
@@ -127,7 +153,7 @@ def insert_sample_data(cursor):
         (5, 1, 1, "USB programming"),
     ]
     cursor.executemany(
-        "INSERT INTO board_peripherals (board_id, peripheral_id, quantity, notes) VALUES (?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO board_peripherals (board_id, peripheral_id, quantity, notes) VALUES (?, ?, ?, ?)",
         board_peripherals
     )
     
@@ -144,9 +170,14 @@ def insert_sample_data(cursor):
         (5, 4),
     ]
     cursor.executemany(
-        "INSERT INTO board_features (board_id, feature_id) VALUES (?, ?)",
+        "INSERT OR IGNORE INTO board_features (board_id, feature_id) VALUES (?, ?)",
         board_features
     )
 
 if __name__ == "__main__":
-    initialize_database()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--force', action='store_true', help='Force recreation of database')
+    args = parser.parse_args()
+    
+    initialize_database(force=args.force)
