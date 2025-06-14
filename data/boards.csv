@@ -1,4 +1,0 @@
-name,manufacturer,price,logic_elements,memory_kb,dsp_blocks,io_pins,transceivers,flash_mb,ram_mb
-Nexys A7,Xilinx,349,63400,1800,240,410,0,128,256
-Cyclone 10 GX,Intel,599,110000,5520,144,288,12,0,2048
-ICE40UP5K,Lattice,25,5280,120,8,206,0,0,0
