@@ -10,7 +10,7 @@ def export_to_json():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # Query to get all board data with joins
+    # Updated query with proper GROUP_CONCAT syntax
     query = """
     SELECT 
         b.id,
@@ -31,16 +31,18 @@ def export_to_json():
         s.max_user_io,
         s.transceivers,
         s.transceiver_speed_gbps,
-        GROUP_CONCAT(DISTINCT p.name, '||') as peripherals,
-        GROUP_CONCAT(DISTINCT fe.name, '||') as features
+        (SELECT GROUP_CONCAT(DISTINCT p.name, '||') 
+         FROM board_peripherals bp
+         JOIN peripherals p ON bp.peripheral_id = p.id
+         WHERE bp.board_id = b.id) as peripherals,
+        (SELECT GROUP_CONCAT(DISTINCT fe.name, '||') 
+         FROM board_features bf
+         JOIN features fe ON bf.feature_id = fe.id
+         WHERE bf.board_id = b.id) as features
     FROM fpga_boards b
     LEFT JOIN manufacturers m ON b.manufacturer_id = m.id
     LEFT JOIN fpga_families f ON b.family_id = f.id
     LEFT JOIN specifications s ON b.id = s.board_id
-    LEFT JOIN board_peripherals bp ON b.id = bp.board_id
-    LEFT JOIN peripherals p ON bp.peripheral_id = p.id
-    LEFT JOIN board_features bf ON b.id = bf.board_id
-    LEFT JOIN features fe ON bf.feature_id = fe.id
     GROUP BY b.id
     """
     
