@@ -9,27 +9,45 @@ document.addEventListener('DOMContentLoaded', function() {
     let uniquePeripherals = new Set();
     let uniqueFeatures = new Set();
     
-    fetch('data/boards.json')
-        .then(response => response.json())
-        .then(data => {
-            boards = data;
+    // DOM elements
+    const searchInput = document.getElementById('search');
+    const searchBtn = document.getElementById('search-btn');
+    const minPriceInput = document.getElementById('min-price');
+    const maxPriceInput = document.getElementById('max-price');
+    const logicRange = document.getElementById('logic-elements-range');
+    const logicValue = document.getElementById('logic-elements-value');
+    const sortSelect = document.getElementById('sort-by');
+    const resetBtn = document.getElementById('reset-filters');
+    const resultsCount = document.getElementById('results-count');
+    const boardsContainer = document.getElementById('boards-container');
+    
+    // Initialize
+    fetchData();
+    
+    async function fetchData() {
+        try {
+            const response = await fetch('data/boards.json');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            boards = await response.json();
             processData(boards);
             renderBoards(boards);
             renderFilters();
             attachEventListeners();
-        })
-        .catch(error => {
+            addDownloadButtons();
+        } catch (error) {
             console.error('Error loading board data:', error);
-            document.getElementById('results-count').textContent = 'Error loading data';
-        });
+            showError(error);
+        }
+    }
     
     function processData(boards) {
         boards.forEach(board => {
             uniqueManufacturers.add(board.manufacturer);
             uniqueFamilies.add(board.family);
             
-            board.peripherals.forEach(peripheral => {
-                uniquePeripherals.add(peripheral);
+            board.peripherals.forEach(p => {
+                uniquePeripherals.add(p.name);
             });
             
             board.features.forEach(feature => {
@@ -39,68 +57,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function renderFilters() {
-        // Manufacturer filters
-        const manufacturerContainer = document.getElementById('manufacturer-filters');
-        uniqueManufacturers.forEach(manufacturer => {
-            manufacturerContainer.appendChild(createCheckboxFilter('manufacturer', manufacturer));
-        });
+        renderFilterOptions('manufacturer', uniqueManufacturers, 'manufacturer-filters');
+        renderFilterOptions('family', uniqueFamilies, 'family-filters');
+        renderFilterOptions('peripheral', uniquePeripherals, 'peripheral-filters');
+        renderFilterOptions('feature', uniqueFeatures, 'feature-filters');
         
-        // Family filters
-        const familyContainer = document.getElementById('family-filters');
-        uniqueFamilies.forEach(family => {
-            familyContainer.appendChild(createCheckboxFilter('family', family));
-        });
-        
-        // Peripheral filters
-        const peripheralContainer = document.getElementById('peripheral-filters');
-        uniquePeripherals.forEach(peripheral => {
-            peripheralContainer.appendChild(createCheckboxFilter('peripheral', peripheral));
-        });
-        
-        // Feature filters
-        const featureContainer = document.getElementById('feature-filters');
-        uniqueFeatures.forEach(feature => {
-            featureContainer.appendChild(createCheckboxFilter('feature', feature));
-        });
+        // Initialize range display
+        updateLogicRangeDisplay();
     }
     
-    function createCheckboxFilter(type, value) {
-        const container = document.createElement('div');
-        container.className = 'filter-option';
+    function renderFilterOptions(type, values, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
         
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.id = `${type}-${value.replace(/\s+/g, '-').toLowerCase()}`;
-        input.dataset.filterType = type;
-        input.dataset.filterValue = value;
-        
-        const label = document.createElement('label');
-        label.htmlFor = input.id;
-        label.textContent = value;
-        
-        container.appendChild(input);
-        container.appendChild(label);
-        
-        return container;
+        const sortedValues = Array.from(values).sort();
+        sortedValues.forEach(value => {
+            const div = document.createElement('div');
+            div.className = 'filter-option';
+            
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.id = `${type}-${value.replace(/\s+/g, '-').toLowerCase()}`;
+            input.dataset.filterType = type;
+            input.dataset.filterValue = value;
+            
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.textContent = value;
+            
+            div.appendChild(input);
+            div.appendChild(label);
+            container.appendChild(div);
+        });
     }
     
     function renderBoards(filteredBoards) {
-        const container = document.getElementById('boards-container');
-        container.innerHTML = '';
+        boardsContainer.innerHTML = '';
         
-        if (filteredBoards.length === 0) {
-            container.innerHTML = '<p class="no-results">No boards match your criteria. Try adjusting your filters.</p>';
-            document.getElementById('results-count').textContent = '0 boards found';
+        if (!filteredBoards || filteredBoards.length === 0) {
+            boardsContainer.innerHTML = '<p class="no-results">No boards match your criteria. Try adjusting your filters.</p>';
+            resultsCount.textContent = '0 boards found';
             return;
         }
         
-        document.getElementById('results-count').textContent = `${filteredBoards.length} ${filteredBoards.length === 1 ? 'board' : 'boards'} found`;
+        resultsCount.textContent = `${filteredBoards.length} ${filteredBoards.length === 1 ? 'board' : 'boards'} found`;
         
         filteredBoards.forEach(board => {
             const card = document.createElement('div');
             card.className = 'board-card';
             
-            // Board image placeholder (you could add actual images later)
+            // Board image placeholder
             const imageDiv = document.createElement('div');
             imageDiv.className = 'board-image';
             imageDiv.style.backgroundColor = getRandomColor();
@@ -109,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const infoDiv = document.createElement('div');
             infoDiv.className = 'board-info';
             
+            // Create elements
             const title = document.createElement('h2');
             title.textContent = board.name;
             
@@ -119,6 +126,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const family = document.createElement('span');
             family.className = 'board-family';
             family.textContent = board.family;
+            
+            const year = document.createElement('span');
+            year.className = 'board-year';
+            year.textContent = `Released: ${board.release_year || 'N/A'}`;
             
             const price = document.createElement('div');
             price.className = 'board-price';
@@ -148,10 +159,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const peripheralsDiv = document.createElement('div');
             peripheralsDiv.className = 'board-peripherals';
             
-            board.peripherals.forEach(peripheral => {
+            board.peripherals.forEach(p => {
                 const tag = document.createElement('span');
                 tag.className = 'peripheral-tag';
-                tag.textContent = peripheral;
+                tag.textContent = `${p.name}${p.quantity > 1 ? ` (${p.quantity})` : ''}`;
+                if (p.notes) tag.title = p.notes;
                 peripheralsDiv.appendChild(tag);
             });
             
@@ -169,23 +181,41 @@ document.addEventListener('DOMContentLoaded', function() {
             // Documentation link
             let docLink = '';
             if (board.documentation_url) {
-                docLink = `<a href="${board.documentation_url}" target="_blank" class="board-link">View Documentation</a>`;
+                docLink = `<a href="${board.documentation_url}" target="_blank" class="board-link">
+                    <i class="fas fa-book"></i> Documentation
+                </a>`;
             }
             
+            // Dimensions
+            let dimensions = '';
+            if (board.dimensions) {
+                dimensions = `<div class="board-dimensions">
+                    <i class="fas fa-ruler-combined"></i> ${board.dimensions}
+                </div>`;
+            }
+            
+            // Assemble the card
             infoDiv.innerHTML = `
                 ${title.outerHTML}
-                ${manufacturer.outerHTML}
-                ${family.outerHTML}
+                <div class="board-meta">
+                    ${manufacturer.outerHTML}
+                    ${family.outerHTML}
+                    ${year.outerHTML}
+                </div>
                 ${price.outerHTML}
+                ${dimensions}
                 ${specsDiv.outerHTML}
+                <div class="board-description">${board.description || ''}</div>
+                <h3>Peripherals</h3>
                 ${peripheralsDiv.outerHTML}
+                <h3>Features</h3>
                 ${featuresDiv.outerHTML}
                 ${docLink}
             `;
             
             card.appendChild(imageDiv);
             card.appendChild(infoDiv);
-            container.appendChild(card);
+            boardsContainer.appendChild(card);
         });
     }
     
@@ -202,47 +232,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function attachEventListeners() {
-        // Search functionality
-        document.getElementById('search-btn').addEventListener('click', applyFilters);
-        document.getElementById('search').addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') {
-                applyFilters();
-            }
-        });
+        // Search
+        searchBtn.addEventListener('click', applyFilters);
+        searchInput.addEventListener('keyup', (e) => e.key === 'Enter' && applyFilters());
         
-        // Filter checkboxes
+        // Filters
         document.querySelectorAll('.filter-options input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', applyFilters);
         });
         
         // Price range
-        document.getElementById('min-price').addEventListener('change', applyFilters);
-        document.getElementById('max-price').addEventListener('change', applyFilters);
+        minPriceInput.addEventListener('change', applyFilters);
+        maxPriceInput.addEventListener('change', applyFilters);
         
         // Logic elements range
-        const logicRange = document.getElementById('logic-elements-range');
-        const logicValue = document.getElementById('logic-elements-value');
-        
-        logicRange.addEventListener('input', function() {
-            const value = parseInt(this.value);
-            logicValue.textContent = value === 1000000 ? 'Up to 1,000,000' : `Up to ${value.toLocaleString()}`;
-        });
-        
+        logicRange.addEventListener('input', updateLogicRangeDisplay);
         logicRange.addEventListener('change', applyFilters);
         
-        // Sort options
-        document.getElementById('sort-by').addEventListener('change', applyFilters);
+        // Sort
+        sortSelect.addEventListener('change', applyFilters);
         
-        // Reset filters
-        document.getElementById('reset-filters').addEventListener('click', resetFilters);
+        // Reset
+        resetBtn.addEventListener('click', resetFilters);
+    }
+    
+    function updateLogicRangeDisplay() {
+        const value = parseInt(logicRange.value);
+        logicValue.textContent = value === 1000000 ? 'Up to 1,000,000' : `Up to ${value.toLocaleString()}`;
     }
     
     function applyFilters() {
-        const searchTerm = document.getElementById('search').value.toLowerCase();
-        const minPrice = parseFloat(document.getElementById('min-price').value) || 0;
-        const maxPrice = parseFloat(document.getElementById('max-price').value) || Infinity;
-        const maxLogicElements = parseInt(document.getElementById('logic-elements-range').value);
-        const sortOption = document.getElementById('sort-by').value;
+        const searchTerm = searchInput.value.toLowerCase();
+        const minPrice = parseFloat(minPriceInput.value) || 0;
+        const maxPrice = parseFloat(maxPriceInput.value) || Infinity;
+        const maxLogicElements = parseInt(logicRange.value);
+        const sortOption = sortSelect.value;
         
         // Get selected filters
         const selectedManufacturers = getSelectedFilters('manufacturer');
@@ -253,9 +277,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Filter boards
         let filteredBoards = boards.filter(board => {
             // Search term
-            if (searchTerm && !board.name.toLowerCase().includes(searchTerm) && 
-                !board.manufacturer.toLowerCase().includes(searchTerm) && 
-                !board.family.toLowerCase().includes(searchTerm)) {
+            if (searchTerm && !(
+                board.name.toLowerCase().includes(searchTerm) || 
+                board.manufacturer.toLowerCase().includes(searchTerm) || 
+                board.family.toLowerCase().includes(searchTerm) ||
+                (board.description && board.description.toLowerCase().includes(searchTerm))
+            ) {
                 return false;
             }
             
@@ -282,18 +309,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Peripherals
             if (selectedPeripherals.size > 0) {
-                const hasAllSelectedPeripherals = Array.from(selectedPeripherals).every(peripheral => 
-                    board.peripherals.includes(peripheral)
+                const boardPeripherals = board.peripherals.map(p => p.name);
+                const hasAllSelected = Array.from(selectedPeripherals).every(p => 
+                    boardPeripherals.includes(p)
                 );
-                if (!hasAllSelectedPeripherals) return false;
+                if (!hasAllSelected) return false;
             }
             
             // Features
             if (selectedFeatures.size > 0) {
-                const hasAllSelectedFeatures = Array.from(selectedFeatures).every(feature => 
-                    board.features.includes(feature)
+                const hasAllSelected = Array.from(selectedFeatures).every(f => 
+                    board.features.includes(f)
                 );
-                if (!hasAllSelectedFeatures) return false;
+                if (!hasAllSelected) return false;
             }
             
             return true;
@@ -302,20 +330,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sort boards
         filteredBoards.sort((a, b) => {
             switch (sortOption) {
-                case 'name-asc':
-                    return a.name.localeCompare(b.name);
-                case 'name-desc':
-                    return b.name.localeCompare(a.name);
-                case 'price-asc':
-                    return (a.typical_price_usd || 0) - (b.typical_price_usd || 0);
-                case 'price-desc':
-                    return (b.typical_price_usd || 0) - (a.typical_price_usd || 0);
-                case 'logic-asc':
-                    return (a.logic_elements || 0) - (b.logic_elements || 0);
-                case 'logic-desc':
-                    return (b.logic_elements || 0) - (a.logic_elements || 0);
-                default:
-                    return 0;
+                case 'name-asc': return a.name.localeCompare(b.name);
+                case 'name-desc': return b.name.localeCompare(a.name);
+                case 'price-asc': return (a.typical_price_usd || 0) - (b.typical_price_usd || 0);
+                case 'price-desc': return (b.typical_price_usd || 0) - (a.typical_price_usd || 0);
+                case 'logic-asc': return (a.logic_elements || 0) - (b.logic_elements || 0);
+                case 'logic-desc': return (b.logic_elements || 0) - (a.logic_elements || 0);
+                default: return 0;
             }
         });
         
@@ -324,31 +345,110 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function getSelectedFilters(type) {
         const checkboxes = document.querySelectorAll(`input[data-filter-type="${type}"]:checked`);
-        return new Set(Array.from(checkboxes).map(checkbox => checkbox.dataset.filterValue));
+        return new Set(Array.from(checkboxes).map(cb => cb.dataset.filterValue));
     }
     
     function resetFilters() {
         // Reset search
-        document.getElementById('search').value = '';
+        searchInput.value = '';
         
         // Reset checkboxes
-        document.querySelectorAll('.filter-options input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = false;
+        document.querySelectorAll('.filter-options input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
         });
         
         // Reset price range
-        document.getElementById('min-price').value = '';
-        document.getElementById('max-price').value = '';
+        minPriceInput.value = '';
+        maxPriceInput.value = '';
         
         // Reset logic elements range
-        const logicRange = document.getElementById('logic-elements-range');
         logicRange.value = 1000000;
-        document.getElementById('logic-elements-value').textContent = 'Up to 1,000,000';
+        updateLogicRangeDisplay();
         
         // Reset sort
-        document.getElementById('sort-by').value = 'name-asc';
+        sortSelect.value = 'name-asc';
         
         // Reapply filters
         applyFilters();
+    }
+    
+    function showError(error) {
+        resultsCount.textContent = 'Error loading data';
+        boardsContainer.innerHTML = `
+            <div class="error-message">
+                <h3>Failed to load data</h3>
+                <p>${error.message}</p>
+                <p>Please try refreshing the page or check back later.</p>
+            </div>
+        `;
+    }
+    
+    function addDownloadButtons() {
+        document.getElementById('download-csv').addEventListener('click', () => {
+            const filteredBoards = getFilteredBoardsForExport();
+            const csvContent = convertToCSV(filteredBoards);
+            downloadFile(csvContent, 'fpga_boards.csv', 'text/csv');
+        });
+        
+        document.getElementById('download-json').addEventListener('click', () => {
+            const filteredBoards = getFilteredBoardsForExport();
+            downloadFile(
+                JSON.stringify(filteredBoards, null, 2),
+                'fpga_boards.json',
+                'application/json'
+            );
+        });
+    }
+    
+    function getFilteredBoardsForExport() {
+        // Get current filtered boards or all boards if no filters active
+        const cards = document.querySelectorAll('.board-card');
+        if (cards.length === boards.length || cards.length === 0) {
+            return boards;
+        }
+        
+        // Reconstruct filtered boards from visible cards
+        const filteredBoards = [];
+        cards.forEach(card => {
+            const boardName = card.querySelector('h2').textContent;
+            const board = boards.find(b => b.name === boardName);
+            if (board) filteredBoards.push(board);
+        });
+        
+        return filteredBoards;
+    }
+    
+    function convertToCSV(data) {
+        if (data.length === 0) return '';
+        
+        // Flatten the data structure for CSV
+        const flatData = data.map(board => ({
+            ...board,
+            peripherals: board.peripherals.map(p => 
+                `${p.name}${p.quantity > 1 ? ` (${p.quantity})` : ''}${p.notes ? ` [${p.notes}]` : ''}`
+            ).join('; '),
+            features: board.features.join('; ')
+        }));
+        
+        const headers = Object.keys(flatData[0]);
+        const rows = flatData.map(obj => 
+            headers.map(header => 
+                JSON.stringify(obj[header], (_, val) => val === null ? '' : val)
+            )
+        );
+        
+        return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    }
+    
+    function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 });

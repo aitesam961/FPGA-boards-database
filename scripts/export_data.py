@@ -1,16 +1,19 @@
 import sqlite3
 import json
+import csv
 from pathlib import Path
 
-def export_to_json():
+def export_data():
     db_path = Path(__file__).parent.parent / "database" / "fpga_boards.db"
-    output_path = Path(__file__).parent.parent / "docs" / "data" / "boards.json"
+    output_dir = Path(__file__).parent.parent / "docs" / "data"
+    output_dir.mkdir(parents=True, exist_ok=True)
     
+    # Connect to database
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
-    # First get all boards with their basic info
+    # Get all boards with basic info
     cursor.execute("""
     SELECT 
         b.id,
@@ -35,24 +38,25 @@ def export_to_json():
     LEFT JOIN manufacturers m ON b.manufacturer_id = m.id
     LEFT JOIN fpga_families f ON b.family_id = f.id
     LEFT JOIN specifications s ON b.id = s.board_id
+    ORDER BY b.name
     """)
     
     boards = []
     for board_row in cursor.fetchall():
         board = dict(board_row)
         
-        # Get peripherals for this board
+        # Get peripherals
         cursor.execute("""
-        SELECT p.name 
+        SELECT p.name, bp.quantity, bp.notes
         FROM board_peripherals bp
         JOIN peripherals p ON bp.peripheral_id = p.id
         WHERE bp.board_id = ?
         """, (board['id'],))
-        board['peripherals'] = [row[0] for row in cursor.fetchall()]
+        board['peripherals'] = [dict(row) for row in cursor.fetchall()]
         
-        # Get features for this board
+        # Get features
         cursor.execute("""
-        SELECT f.name 
+        SELECT f.name
         FROM board_features bf
         JOIN features f ON bf.feature_id = f.id
         WHERE bf.board_id = ?
@@ -61,13 +65,31 @@ def export_to_json():
         
         boards.append(board)
     
-    # Write to JSON file
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, 'w') as f:
+    # Export to JSON
+    json_path = output_dir / "boards.json"
+    with open(json_path, 'w') as f:
         json.dump(boards, f, indent=2)
     
+    # Export to CSV
+    csv_path = output_dir / "boards.csv"
+    if boards:
+        # Flatten the data for CSV
+        flat_boards = []
+        for board in boards:
+            flat_board = board.copy()
+            flat_board['peripherals'] = '; '.join(
+                f"{p['name']} ({p['quantity']})" for p in board['peripherals']
+            )
+            flat_board['features'] = '; '.join(board['features'])
+            flat_boards.append(flat_board)
+        
+        with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=flat_boards[0].keys())
+            writer.writeheader()
+            writer.writerows(flat_boards)
+    
     conn.close()
-    print(f"Data exported to {output_path}")
+    print(f"Data exported to:\n- {json_path}\n- {csv_path}")
 
 if __name__ == "__main__":
-    export_to_json()
+    export_data()
